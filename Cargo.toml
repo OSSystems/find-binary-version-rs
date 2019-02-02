@@ -2,6 +2,16 @@
 name = "find-binary-version"
 version = "0.1.0"
 authors = ["Otavio Salvador <otavio@ossystems.com.br>"]
+description = "Identify binary versions easily"
+repository = "https://github.com/OSSystems/find-binary-version-rs"
+homepage = "https://github.com/OSSystems/find-binary-version-rs"
+documentation = "https://docs.rs/find-binary-version"
+keywords = ["version", "binary"]
+license = "MIT OR Apache-2.0"
+readme = "README.md"
 edition = "2018"
+
+[badges]
+travis-ci = { repository = "OSSystems/find-binary-version-rs" }
 
 [dependencies]
