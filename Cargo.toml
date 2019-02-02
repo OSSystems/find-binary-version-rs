@@ -1,0 +1,7 @@
+[package]
+name = "find-binary-version"
+version = "0.1.0"
+authors = ["Otavio Salvador <otavio@ossystems.com.br>"]
+edition = "2018"
+
+[dependencies]
