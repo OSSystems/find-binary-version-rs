@@ -2,7 +2,8 @@
 
 # find-binary-version
 
-
+The library provide a way to get the binary version for a specific
+binary.
 
 ## License
 
