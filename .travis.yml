@@ -9,4 +9,4 @@ script:
   - echo "Checking code formatting" ; cargo fmt --all -- --check
   - echo "Build project"  ; cargo build
   - echo "Run unit tests" ; cargo test
-  - echo "Checking code lints" ; cargo clippy --tests -- -D clippy
+  - echo "Checking code lints" ; cargo clippy --tests -- -D clippy::all
