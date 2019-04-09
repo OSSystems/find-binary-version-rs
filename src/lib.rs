@@ -188,7 +188,7 @@ mod tests {
 
         // Write the version data
         buf.set_position(0x1C00 + 0x200);
-        buf.write(b"5.0.8").unwrap();
+        buf.write_all(b"5.0.8").unwrap();
 
         assert_eq!(
             version(BinaryKind::LinuxKernel, &mut buf),
