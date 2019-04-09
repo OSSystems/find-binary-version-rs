@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/OSSystems/find-binary-version-rs.svg?branch=master)](https://https://travis-ci.org/OSSystems/find-binary-version-rs) [![Documentation](https://docs.rs/find-binary-version/badge.svg)](https://docs.rs/find-binary-version)
+[![Build Status](https://travis-ci.org/OSSystems/find-binary-version-rs.svg?branch=master)](https://travis-ci.org/OSSystems/find-binary-version-rs) [![Documentation](https://docs.rs/find-binary-version/badge.svg)](https://docs.rs/find-binary-version)
 
 # {{crate}}
 
