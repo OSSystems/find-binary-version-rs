@@ -18,6 +18,7 @@
 //! The library provide a way to get the binary version for a specific
 //! binary.
 
+use crate::strings::IntoStringsIter;
 use byteorder::{BigEndian, ReadBytesExt};
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -70,10 +71,13 @@ impl<'a, R: Read> VersionFinder for UBoot<'a, R> {
             static ref RE: Regex = Regex::new(r"U-Boot(?: SPL)? (?P<version>\S+) \(.*\)").unwrap();
         }
 
-        let mut stanza = String::with_capacity(4096);
-        self.buf.read_to_string(&mut stanza).ok()?;
+        for stanza in self.buf.into_strings_iter() {
+            if let Some(v) = RE.captures(&stanza).and_then(|m| m.name("version")) {
+                return Some(v.as_str().to_string());
+            }
+        }
 
-        Some(RE.captures(&stanza)?.name("version")?.as_str().to_string())
+        None
     }
 }
 
