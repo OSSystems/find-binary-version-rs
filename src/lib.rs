@@ -157,18 +157,17 @@ mod tests {
     #[test]
     fn u_boot() {
         for (content, expected) in vec![
+            ("U-Boot 2019.04 (01/04/2019)", Some("2019.04".to_string())),
             (
-                "U-Boot 13.08.1988 (13/08/1988)",
-                Some("13.08.1988".to_string()),
-            ),
-            (
-                "U-Boot SPL 13.08.1988 (13/08/1988)",
-                Some("13.08.1988".to_string()),
+                "U-Boot SPL 2019.04 (01/04/2019)",
+                Some("2019.04".to_string()),
             ),
         ] {
             assert_eq!(
                 version(BinaryKind::UBoot, &mut Cursor::new(content.as_bytes())),
-                expected
+                expected,
+                "Failed to parse {:?}",
+                content
             );
         }
     }
