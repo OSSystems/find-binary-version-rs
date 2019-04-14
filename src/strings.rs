@@ -3,6 +3,13 @@
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
+// This code is based on Redox OS implementation of binutils' strings
+// module. This reworked the code to provide an Iterator over the
+// bytes so it allows a more flexible use.
+//
+// Reference code:
+//  https://gitlab.redox-os.org/redox-os/binutils/blob/966c6f039e20d56cec369621065646c4f21cbd61/src/strings.rs
+
 use std::{io::Read, slice, str};
 
 /// A trait for characters/bytes that can be printable.
