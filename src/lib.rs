@@ -27,6 +27,8 @@ use std::{
     os::unix::ffi::OsStrExt,
 };
 
+mod strings;
+
 #[derive(Debug, Copy, Clone)]
 /// Define the binary kind to use for matching.
 pub enum BinaryKind {
