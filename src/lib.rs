@@ -19,7 +19,7 @@
 //! binary.
 
 use crate::strings::IntoStringsIter;
-use byteorder::{BigEndian, ReadBytesExt};
+use byteorder::{LittleEndian, ReadBytesExt};
 use regex::Regex;
 use std::{
     ffi::OsStr,
@@ -111,13 +111,13 @@ impl<'a, R: Read + Seek> VersionFinder for LinuxKernel<'a, R> {
 
         // Verify the boot_flag magic number
         self.buf.seek(SeekFrom::Start(0x01FE)).ok()?;
-        if self.buf.read_u16::<BigEndian>().ok()? != 0xAA55 {
+        if self.buf.read_u16::<LittleEndian>().ok()? != 0xAA55 {
             return None;
         }
 
         // Get kernel_version pointer
         self.buf.seek(SeekFrom::Start(0x020E)).ok()?;
-        let kernel_version_ptr = u64::from(self.buf.read_u16::<BigEndian>().ok()?);
+        let kernel_version_ptr = u64::from(self.buf.read_u16::<LittleEndian>().ok()?);
 
         // Field name:     kernel_version
         // Type:           read
@@ -181,11 +181,11 @@ mod tests {
 
         // Write the magic number
         buf.set_position(0x01FE);
-        buf.write_u16::<BigEndian>(0xAA55).unwrap();
+        buf.write_u16::<LittleEndian>(0xAA55).unwrap();
 
         // Write the version offset
         buf.set_position(0x020E);
-        buf.write_u16::<BigEndian>(0x1C00).unwrap();
+        buf.write_u16::<LittleEndian>(0x1C00).unwrap();
 
         // Write the version data
         buf.set_position(0x1C00 + 0x200);
