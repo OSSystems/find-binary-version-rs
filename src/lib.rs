@@ -20,7 +20,6 @@
 
 use crate::strings::IntoStringsIter;
 use byteorder::{BigEndian, ReadBytesExt};
-use lazy_static::lazy_static;
 use regex::Regex;
 use std::{
     ffi::OsStr,
@@ -67,12 +66,9 @@ impl<'a, R> UBoot<'a, R> {
 
 impl<'a, R: Read> VersionFinder for UBoot<'a, R> {
     fn get_version(&mut self) -> Option<String> {
-        lazy_static! {
-            static ref RE: Regex = Regex::new(r"U-Boot(?: SPL)? (?P<version>\S+) \(.*\)").unwrap();
-        }
-
+        let re = Regex::new(r"U-Boot(?: SPL)? (?P<version>\S+) \(.*\)").unwrap();
         for stanza in self.buf.into_strings_iter() {
-            if let Some(v) = RE.captures(&stanza).and_then(|m| m.name("version")) {
+            if let Some(v) = re.captures(&stanza).and_then(|m| m.name("version")) {
                 return Some(v.as_str().to_string());
             }
         }

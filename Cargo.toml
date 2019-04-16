@@ -16,7 +16,6 @@ travis-ci = { repository = "OSSystems/find-binary-version-rs" }
 
 [dependencies]
 byteorder = "1"
-lazy_static = "1"
 regex = "1"
 
 [dev-dependencies]
