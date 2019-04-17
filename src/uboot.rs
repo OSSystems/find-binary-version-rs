@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use crate::{strings::IntoStringsIter, VersionFinder};
-use regex::Regex;
+use crate::VersionFinder;
+use regex::bytes::Regex;
 use std::io::Read;
 
 pub(crate) struct UBoot<'a, R> {
