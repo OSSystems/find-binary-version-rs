@@ -18,34 +18,43 @@ impl<'a, R> UBoot<'a, R> {
 
 impl<'a, R: Read> VersionFinder for UBoot<'a, R> {
     fn get_version(&mut self) -> Option<String> {
-        let re = Regex::new(r"U-Boot(?: SPL)? (?P<version>\S+) \(.*\)").unwrap();
-        for stanza in self.buf.into_strings_iter() {
-            if let Some(v) = re.captures(&stanza).and_then(|m| m.name("version")) {
-                return Some(v.as_str().to_string());
-            }
-        }
+        // Read the U-Boot version from the reader
+        let mut buffer = [0; 0x200];
+        self.buf.read(&mut buffer).ok()?;
 
-        None
+        // Filter out unnecessary information
+        let re = Regex::new(r"U-Boot(?: SPL)? (?P<version>\d+.?\.[^\s]+)").unwrap();
+        re.captures(&buffer)
+            .and_then(|m| m.name("version"))
+            .and_then(|v| std::str::from_utf8(v.as_bytes()).ok())
+            .and_then(|v| Some(v.to_string()))
     }
 }
 
-#[test]
-fn u_boot() {
+#[cfg(test)]
+mod test {
     use crate::{version, BinaryKind};
-    use std::io::Cursor;
+    use std::io::{Read, Seek};
 
-    for (content, expected) in vec![
-        ("U-Boot 2019.04 (01/04/2019)", Some("2019.04".to_string())),
-        (
-            "U-Boot SPL 2019.04 (01/04/2019)",
-            Some("2019.04".to_string()),
-        ),
-    ] {
-        assert_eq!(
-            version(BinaryKind::UBoot, &mut Cursor::new(content.as_bytes())),
-            expected,
-            "Failed to parse {:?}",
-            content
-        );
+    fn fixture(name: &str) -> impl Read + Seek {
+        use std::{fs::File, io::BufReader};
+
+        BufReader::new(
+            File::open(&format!("tests/fixtures/uboot/{}", name))
+                .unwrap_or_else(|_| panic!("Couldn't open the fixture {}", name)),
+        )
+    }
+
+    #[test]
+    fn valid() {
+        for (f, v) in &[
+            ("arm-spl", "2019.04-00014-gc93ced78db"),
+            ("arm-u-boot-dtb.img", "2019.04-00014-gc93ced78db"),
+        ] {
+            assert_eq!(
+                version(BinaryKind::UBoot, &mut fixture(f)),
+                Some(v.to_string()),
+            );
+        }
     }
 }
