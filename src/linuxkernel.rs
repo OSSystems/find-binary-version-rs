@@ -4,11 +4,8 @@
 
 use crate::VersionFinder;
 use byteorder::{LittleEndian, ReadBytesExt};
-use std::{
-    ffi::OsStr,
-    io::{Read, Seek, SeekFrom},
-    os::unix::ffi::OsStrExt,
-};
+use regex::bytes::Regex;
+use std::io::{Read, Seek, SeekFrom};
 
 pub(crate) struct LinuxKernel<'a, R>
 where
@@ -70,42 +67,43 @@ impl<'a, R: Read + Seek> VersionFinder for LinuxKernel<'a, R> {
             .seek(SeekFrom::Start(kernel_version_ptr + 0x200))
             .ok()?;
 
-        let buf = self
-            .buf
-            .bytes()
-            .map(|c| c.unwrap_or(0))
-            .take_while(|&n| n != 0)
-            .collect::<Vec<u8>>();
+        // Read the Linux kernel version from the reader
+        let mut buffer = [0; 0x200];
+        self.buf.read(&mut buffer).ok()?;
 
-        Some(OsStr::from_bytes(&buf).to_str()?.to_string())
+        // Filter out unnecessary information
+        let re = Regex::new(r"(?P<version>\d+.?\.[^\s]+)").unwrap();
+        re.captures(&buffer)
+            .and_then(|m| m.name("version"))
+            .and_then(|v| std::str::from_utf8(v.as_bytes()).ok())
+            .and_then(|v| Some(v.to_string()))
     }
 }
 
-#[test]
-fn linux_version() {
+#[cfg(test)]
+mod test {
     use crate::{version, BinaryKind};
-    use byteorder::WriteBytesExt;
-    use std::io::{Cursor, Write};
+    use std::io::{Read, Seek};
 
-    let mut buf = Cursor::new(Vec::new());
-    // Write the setup_sects
-    buf.set_position(0x01F1);
-    buf.write_u8(15).unwrap();
+    fn fixture(name: &str) -> impl Read + Seek {
+        use std::{fs::File, io::BufReader};
 
-    // Write the magic number
-    buf.set_position(0x01FE);
-    buf.write_u16::<LittleEndian>(0xAA55).unwrap();
+        BufReader::new(
+            File::open(&format!("tests/fixtures/linuxkernel/{}", name))
+                .unwrap_or_else(|_| panic!("Couldn't open the fixture {}", name)),
+        )
+    }
 
-    // Write the version offset
-    buf.set_position(0x020E);
-    buf.write_u16::<LittleEndian>(0x1C00).unwrap();
-
-    // Write the version data
-    buf.set_position(0x1C00 + 0x200);
-    buf.write_all(b"5.0.8").unwrap();
-
-    assert_eq!(
-        version(BinaryKind::LinuxKernel, &mut buf),
-        Some("5.0.8".to_string())
-    );
+    #[test]
+    fn linux_version() {
+        for (f, v) in &[
+            ("x86-bzImage", "4.1.30-1-MANJARO"),
+            ("x86-zImage", "4.1.30-1-MANJARO"),
+        ] {
+            assert_eq!(
+                version(BinaryKind::LinuxKernel, &mut fixture(f)),
+                Some(v.to_string())
+            );
+        }
+    }
 }
