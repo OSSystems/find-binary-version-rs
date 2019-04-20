@@ -52,7 +52,7 @@ mod test {
             ("arm-u-boot-dtb.img", "2019.04-00014-gc93ced78db"),
         ] {
             assert_eq!(
-                version(BinaryKind::UBoot, &mut fixture(f)),
+                version(&mut fixture(f), BinaryKind::UBoot),
                 Some(v.to_string()),
             );
         }

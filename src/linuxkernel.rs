@@ -189,7 +189,7 @@ mod test {
             ("x86-zImage", "4.1.30-1-MANJARO"),
         ] {
             assert_eq!(
-                version(BinaryKind::LinuxKernel, &mut fixture(f)),
+                version(&mut fixture(f), BinaryKind::LinuxKernel),
                 Some(v.to_string())
             );
         }

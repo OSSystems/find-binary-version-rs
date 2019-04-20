@@ -41,7 +41,7 @@ trait VersionFinder {
 }
 
 /// Get the version for a specific binary.
-pub fn version<R: Read + Seek>(kind: BinaryKind, mut buffer: &mut R) -> Option<String> {
+pub fn version<R: Read + Seek>(mut buffer: &mut R, kind: BinaryKind) -> Option<String> {
     match kind {
         BinaryKind::LinuxKernel => LinuxKernel::from_reader(&mut buffer).get_version(),
         BinaryKind::UBoot => UBoot::from_reader(&mut buffer).get_version(),
