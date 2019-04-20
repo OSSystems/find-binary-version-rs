@@ -3,17 +3,38 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 use crate::VersionFinder;
-use byteorder::{LittleEndian, ReadBytesExt};
+use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
+use flate2::bufread::GzDecoder;
 use regex::bytes::Regex;
 use std::io::{Read, Seek, SeekFrom};
 
 #[allow(clippy::enum_variant_names)]
 enum LinuxKernelKind {
+    ARMzImage,
+    UImage,
     X86bzImage,
     X86zImage,
 }
 
+// U-Boot Image Magic Number
+const UIMAGE_MAGIC_NUMBER: u32 = 0x2705_1956;
+
+// zImage Magic Number used in ARM
+const ARM_ZIMAGE_MAGIC_NUMBER: u32 = 0x016F_2818;
+
 fn discover_linux_kernel_kind<R: Read + Seek>(buf: &mut R) -> Option<LinuxKernelKind> {
+    // U-Boot Image Magic header is stored at begin of file
+    buf.seek(SeekFrom::Start(0x0000)).ok()?;
+    if buf.read_u32::<BigEndian>().ok()? == UIMAGE_MAGIC_NUMBER {
+        return Some(LinuxKernelKind::UImage);
+    }
+
+    // ARM zImage Magic header is stored at offset 0x0024 of file
+    buf.seek(SeekFrom::Start(0x0024)).ok()?;
+    if buf.read_u32::<LittleEndian>().ok()? == ARM_ZIMAGE_MAGIC_NUMBER {
+        return Some(LinuxKernelKind::ARMzImage);
+    }
+
     // Taken from: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/x86/boot.txt#n144
     //
     // Offset  Proto   Name            Meaning
@@ -67,6 +88,19 @@ impl<'a, R: Read + Seek> LinuxKernel<'a, R> {
 impl<'a, R: Read + Seek> VersionFinder for LinuxKernel<'a, R> {
     fn get_version(&mut self) -> Option<String> {
         let buffer = match discover_linux_kernel_kind(self.buf)? {
+            LinuxKernelKind::ARMzImage => {
+                // FIXME: Avoid reading the whole file
+                let mut raw = Vec::new();
+                self.buf.read_to_end(&mut raw).ok()?;
+
+                // Read the Linux kernel version from the reader
+                let mut decoder = GzDecoder::new(&raw[..]);
+                let mut buffer = [0; 0x200];
+                decoder.read(&mut buffer).ok()?;
+
+                buffer
+            }
+
             LinuxKernelKind::X86bzImage | LinuxKernelKind::X86zImage => {
                 // Taken from: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/x86/boot.txt#n144
                 //
@@ -109,6 +143,18 @@ impl<'a, R: Read + Seek> VersionFinder for LinuxKernel<'a, R> {
 
                 buffer
             }
+
+            LinuxKernelKind::UImage => {
+                // Move to the begin of the file, so we can next read the
+                // buffer to match the version.
+                self.buf.seek(SeekFrom::Start(0)).ok()?;
+
+                // Read the Linux kernel version from the reader
+                let mut buffer = [0; 0x200];
+                self.buf.read(&mut buffer).ok()?;
+
+                buffer
+            }
         };
 
         // Filter out unnecessary information
@@ -137,6 +183,8 @@ mod test {
     #[test]
     fn linux_version() {
         for (f, v) in &[
+            ("arm-uImage", "4.1.15-1.2.0+g274a055"),
+            ("arm-zImage", "4.4.1"),
             ("x86-bzImage", "4.1.30-1-MANJARO"),
             ("x86-zImage", "4.1.30-1-MANJARO"),
         ] {
