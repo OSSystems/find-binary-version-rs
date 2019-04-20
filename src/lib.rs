@@ -18,11 +18,12 @@
 //! The library provide a way to get the binary version for a specific
 //! binary.
 
+mod custom;
 mod linuxkernel;
 mod strings;
 mod uboot;
 
-use crate::{linuxkernel::LinuxKernel, uboot::UBoot};
+use crate::{custom::Custom, linuxkernel::LinuxKernel, uboot::UBoot};
 use std::io::{Read, Seek};
 
 #[derive(Debug, Copy, Clone)]
@@ -42,7 +43,12 @@ trait VersionFinder {
 /// Get the version for a specific binary.
 pub fn version<R: Read + Seek>(kind: BinaryKind, mut buffer: &mut R) -> Option<String> {
     match kind {
-        BinaryKind::UBoot => UBoot::from_reader(&mut buffer).get_version(),
         BinaryKind::LinuxKernel => LinuxKernel::from_reader(&mut buffer).get_version(),
+        BinaryKind::UBoot => UBoot::from_reader(&mut buffer).get_version(),
     }
+}
+
+/// Get the version for a specific pattern.
+pub fn version_with_pattern<R: Read + Seek>(mut buffer: &mut R, pattern: &str) -> Option<String> {
+    Custom::from_reader(&mut buffer, pattern).get_version()
 }
