@@ -27,7 +27,7 @@ impl<'a, R: Read> VersionFinder for UBoot<'a, R> {
         re.captures(&buffer)
             .and_then(|m| m.name("version"))
             .and_then(|v| std::str::from_utf8(v.as_bytes()).ok())
-            .and_then(|v| Some(v.to_string()))
+            .map(|v| v.to_string())
     }
 }
 
