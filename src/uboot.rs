@@ -23,7 +23,7 @@ impl<'a, R: Read> VersionFinder for UBoot<'a, R> {
         let mut buffer = [0; 0x200];
 
         // Avoid recompiling the pattern.
-        let re = Regex::new(r"U-Boot(?: SPL)? (?P<version>\d+.?\.[^\s]+)").unwrap();
+        let re = Regex::new(r"U-Boot(?: SPL)? (?P<version>\d+.?\.[^\s]+) \(.*\)").unwrap();
 
         // Read the U-Boot version from the reader.
         loop {
@@ -65,7 +65,7 @@ mod test {
     #[test]
     fn valid() {
         for (f, v) in &[
-            ("arm-spl", "2019.04-00014-gc93ced78db"),
+            ("arm-spl", "2017.11+fslc+ga07698f"),
             ("arm-u-boot-dtb.img", "2019.04-00014-gc93ced78db"),
         ] {
             assert_eq!(
