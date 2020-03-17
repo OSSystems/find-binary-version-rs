@@ -51,7 +51,7 @@ mod test {
     #[test]
     fn valid() {
         for (f, v) in &[
-            ("arm-spl", "2019.04-00014-gc93ced78db"),
+            ("arm-spl", "2017.11+fslc+ga07698f"),
             ("arm-u-boot-dtb.img", "2019.04-00014-gc93ced78db"),
         ] {
             assert_eq!(

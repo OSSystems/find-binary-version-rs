@@ -18,16 +18,33 @@ impl<'a, R> UBoot<'a, R> {
 
 impl<'a, R: Read> VersionFinder for UBoot<'a, R> {
     fn get_version(&mut self) -> Option<String> {
-        // Read the U-Boot version from the reader
+        // We use a fixed size buffer to avoid allocing too much memory on
+        // embedded devices.
         let mut buffer = [0; 0x200];
-        self.buf.read(&mut buffer).ok()?;
 
-        // Filter out unnecessary information
-        let re = Regex::new(r"U-Boot(?: SPL)? (?P<version>\d+.?\.[^\s]+)").unwrap();
-        re.captures(&buffer)
-            .and_then(|m| m.name("version"))
-            .and_then(|v| std::str::from_utf8(v.as_bytes()).ok())
-            .map(|v| v.to_string())
+        // Avoid recompiling the pattern.
+        let re = Regex::new(r"U-Boot(?: SPL)? (?P<version>\d+.?\.[^\s]+) \(.*\)").unwrap();
+
+        // Read the U-Boot version from the reader.
+        loop {
+            // If no more bytes are available, we need to return as we don't
+            // have more content to read.
+            let n = self.buf.read(&mut buffer).ok()?;
+            if n == 0 {
+                return None;
+            }
+
+            if let Some(version) = re
+                .captures(&buffer)
+                .and_then(|m| m.name("version"))
+                .and_then(|v| std::str::from_utf8(v.as_bytes()).ok())
+                .map(|v| v.to_string())
+            {
+                // Version pattern has been found, so we need to return the
+                // version.
+                return Some(version);
+            }
+        }
     }
 }
 
@@ -48,7 +65,7 @@ mod test {
     #[test]
     fn valid() {
         for (f, v) in &[
-            ("arm-spl", "2019.04-00014-gc93ced78db"),
+            ("arm-spl", "2017.11+fslc+ga07698f"),
             ("arm-u-boot-dtb.img", "2019.04-00014-gc93ced78db"),
         ] {
             assert_eq!(
