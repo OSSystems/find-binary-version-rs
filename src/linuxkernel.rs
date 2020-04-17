@@ -4,9 +4,8 @@
 
 use crate::VersionFinder;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
-use flate2::bufread::GzDecoder;
 use regex::bytes::Regex;
-use std::io::{Read, Seek, SeekFrom};
+use std::io::{self, Read, Seek, SeekFrom};
 
 #[allow(clippy::enum_variant_names)]
 enum LinuxKernelKind {
@@ -89,14 +88,19 @@ impl<'a, R: Read + Seek> VersionFinder for LinuxKernel<'a, R> {
     fn get_version(&mut self) -> Option<String> {
         let buffer = match discover_linux_kernel_kind(self.buf)? {
             LinuxKernelKind::ARMzImage => {
-                // FIXME: Avoid reading the whole file
-                let mut raw = Vec::new();
-                self.buf.read_to_end(&mut raw).ok()?;
+                let mut buffer = [0; 0x200];
+                let buf: &mut [u8] = &mut buffer;
 
                 // Read the Linux kernel version from the reader
-                let mut decoder = GzDecoder::new(&raw[..]);
-                let mut buffer = [0; 0x200];
-                decoder.read(&mut buffer).ok()?;
+                match compress_tools::uncompress_data(&mut self.buf, buf) {
+                    Ok(_) => {}
+                    // Write will most likely overflow the 0x200 bytes slice,
+                    // which is ok sincewe don't need more than that.
+                    Err(compress_tools::Error::Io(ref e))
+                        if e.kind() == io::ErrorKind::WriteZero => {}
+
+                    Err(_) => return None,
+                }
 
                 buffer
             }
