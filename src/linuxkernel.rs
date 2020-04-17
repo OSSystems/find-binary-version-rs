@@ -93,10 +93,22 @@ impl<'a, R: Read + Seek> VersionFinder for LinuxKernel<'a, R> {
                 let mut raw = Vec::new();
                 self.buf.read_to_end(&mut raw).ok()?;
 
+                let mut slice = raw.as_slice();
+                loop {
+                    println!("{:x?}", &slice[..2]);
+                    // "0x1f 0x8b 0x08" is the beginning of the gzipped kernel file
+                    if let [0x1f, 0x8b] = slice[..2] {
+                        break;
+                    }
+                    slice = &slice[1..];
+                }
+                raw = slice.to_vec();
+
                 // Read the Linux kernel version from the reader
+                println!("{:x?}", &raw[..10]);
                 let mut decoder = GzDecoder::new(&raw[..]);
                 let mut buffer = [0; 0x200];
-                decoder.read(&mut buffer).ok()?;
+                dbg!(decoder.read(&mut buffer)).ok()?;
 
                 buffer
             }
