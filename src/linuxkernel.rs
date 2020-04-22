@@ -100,8 +100,9 @@ impl<'a, R: Read + Seek> VersionFinder for LinuxKernel<'a, R> {
                 let mut buffer = [0; 0x200];
                 loop {
                     let n = self.buf.read(&mut buffer).ok()?;
+
+                    // No more data to read
                     if n == 0 {
-                        // EOF
                         return None;
                     }
 
