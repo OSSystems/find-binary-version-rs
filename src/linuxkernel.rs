@@ -86,23 +86,54 @@ impl<'a, R: Read + Seek> LinuxKernel<'a, R> {
 
 impl<'a, R: Read + Seek> VersionFinder for LinuxKernel<'a, R> {
     fn get_version(&mut self) -> Option<String> {
-        let buffer = match discover_linux_kernel_kind(self.buf)? {
+        match discover_linux_kernel_kind(self.buf)? {
             LinuxKernelKind::ARMzImage => {
-                let mut buffer = [0; 0x200];
-                let buf: &mut [u8] = &mut buffer;
-
-                // Read the Linux kernel version from the reader
-                match compress_tools::uncompress_data(&mut self.buf, buf) {
-                    Ok(_) => {}
-                    // Write will most likely overflow the 0x200 bytes slice,
-                    // which is ok sincewe don't need more than that.
-                    Err(compress_tools::Error::Io(ref e))
-                        if e.kind() == io::ErrorKind::WriteZero => {}
-
-                    Err(_) => return None,
+                fn get_version_from_arm<R: Read>(mut rd: R) -> Option<String> {
+                    let mut buffer = Vec::default();
+                    compress_tools::uncompress_data(&mut rd, &mut buffer).ok()?;
+                    let re = Regex::new(r"Linux version (?P<version>\S+).*").unwrap();
+                    let m = re.captures(&buffer)?;
+                    let version = m.name("version")?.as_bytes().to_vec();
+                    Some(String::from_utf8(version).ok()?)
                 }
 
-                buffer
+                let mut buffer = [0; 0x200];
+                loop {
+                    let n = self.buf.read(&mut buffer).ok()?;
+                    if n == 0 {
+                        // EOF
+                        return None;
+                    }
+
+                    // Look for compression format header
+                    for (offset, window) in buffer[0..n].windows(6).enumerate() {
+                        // Headers taken from:
+                        // https://github.com/torvalds/linux/blob/master/scripts/extract-vmlinux
+                        match window {
+                            [0x1f, 0x8b, 0x08, ..] => {}               // gzip
+                            [0xfd, b'7', b'z', b'X', b'Z', 0x00] => {} // xz
+                            [b'B', b'Z', b'h', ..] => {}               // bzip2
+                            [0x5d, 0x00, 0x00, ..] => {}               // lzma
+                            [0x89, 0x4c, 0x5a, ..] => {}               // lzo
+                            [0x02, b'!', b'L', 0x18, ..] => {}         // lz4
+                            [b'(', 0xb5, b'/', 0xfd, ..] => {}         // zstd
+                            _ => continue,
+                        }
+
+                        let mut slice = &buffer[offset..];
+                        let current = self.buf.seek(SeekFrom::Current(0)).ok()?;
+                        let rd = io::Read::chain(&mut slice, &mut self.buf);
+
+                        // Try to get version from uncompressed data
+                        if let Some(version) = get_version_from_arm(rd) {
+                            return Some(version);
+                        }
+
+                        // Seek back to current position so we can keep looking
+                        // for the next compression header
+                        self.buf.seek(SeekFrom::Start(current)).ok()?;
+                    }
+                }
             }
 
             LinuxKernelKind::X86bzImage | LinuxKernelKind::X86zImage => {
@@ -145,7 +176,10 @@ impl<'a, R: Read + Seek> VersionFinder for LinuxKernel<'a, R> {
                 let mut buffer = [0; 0x200];
                 self.buf.read(&mut buffer).ok()?;
 
-                buffer
+                let re = Regex::new(r"(?P<version>\d+.?\.[^\s\u{0}]+)").unwrap();
+                let m = re.captures(&buffer)?;
+                let version = m.name("version")?.as_bytes().to_vec();
+                Some(String::from_utf8(version).ok()?)
             }
 
             LinuxKernelKind::UImage => {
@@ -157,16 +191,12 @@ impl<'a, R: Read + Seek> VersionFinder for LinuxKernel<'a, R> {
                 let mut buffer = [0; 0x200];
                 self.buf.read(&mut buffer).ok()?;
 
-                buffer
+                let re = Regex::new(r"(?P<version>\d+.?\.[^\s\u{0}]+)").unwrap();
+                let m = re.captures(&buffer)?;
+                let version = m.name("version")?.as_bytes().to_vec();
+                Some(String::from_utf8(version).ok()?)
             }
-        };
-
-        // Filter out unnecessary information
-        let re = Regex::new(r"(?P<version>\d+.?\.[^\s\u{0}]+)").unwrap();
-        re.captures(&buffer)
-            .and_then(|m| m.name("version"))
-            .and_then(|v| std::str::from_utf8(v.as_bytes()).ok())
-            .map(|v| v.to_string())
+        }
     }
 }
 
