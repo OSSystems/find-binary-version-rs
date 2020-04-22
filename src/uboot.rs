@@ -4,7 +4,7 @@
 
 use crate::VersionFinder;
 use regex::bytes::Regex;
-use std::io::Read;
+use std::{io::Read, str};
 
 pub(crate) struct UBoot<'a, R> {
     buf: &'a mut R,
@@ -37,7 +37,7 @@ impl<'a, R: Read> VersionFinder for UBoot<'a, R> {
             if let Some(version) = re
                 .captures(&buffer)
                 .and_then(|m| m.name("version"))
-                .and_then(|v| std::str::from_utf8(v.as_bytes()).ok())
+                .and_then(|v| str::from_utf8(v.as_bytes()).ok())
                 .map(|v| v.to_string())
             {
                 // Version pattern has been found, so we need to return the

@@ -5,7 +5,10 @@
 use crate::VersionFinder;
 use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 use regex::bytes::Regex;
-use std::io::{self, Read, Seek, SeekFrom};
+use std::{
+    io::{self, Read, Seek, SeekFrom},
+    str,
+};
 
 #[allow(clippy::enum_variant_names)]
 enum LinuxKernelKind {
@@ -92,9 +95,10 @@ impl<'a, R: Read + Seek> VersionFinder for LinuxKernel<'a, R> {
                     let mut buffer = Vec::default();
                     compress_tools::uncompress_data(&mut rd, &mut buffer).ok()?;
                     let re = Regex::new(r"Linux version (?P<version>\S+).*").unwrap();
-                    let m = re.captures(&buffer)?;
-                    let version = m.name("version")?.as_bytes().to_vec();
-                    Some(String::from_utf8(version).ok()?)
+                    re.captures(&buffer)
+                        .and_then(|m| m.name("version"))
+                        .and_then(|v| str::from_utf8(v.as_bytes()).ok())
+                        .map(|v| v.to_string())
                 }
 
                 let mut buffer = [0; 0x200];
@@ -178,9 +182,10 @@ impl<'a, R: Read + Seek> VersionFinder for LinuxKernel<'a, R> {
                 self.buf.read(&mut buffer).ok()?;
 
                 let re = Regex::new(r"(?P<version>\d+.?\.[^\s\u{0}]+)").unwrap();
-                let m = re.captures(&buffer)?;
-                let version = m.name("version")?.as_bytes().to_vec();
-                Some(String::from_utf8(version).ok()?)
+                re.captures(&buffer)
+                    .and_then(|m| m.name("version"))
+                    .and_then(|v| str::from_utf8(v.as_bytes()).ok())
+                    .map(|v| v.to_string())
             }
 
             LinuxKernelKind::UImage => {
@@ -193,9 +198,10 @@ impl<'a, R: Read + Seek> VersionFinder for LinuxKernel<'a, R> {
                 self.buf.read(&mut buffer).ok()?;
 
                 let re = Regex::new(r"(?P<version>\d+.?\.[^\s\u{0}]+)").unwrap();
-                let m = re.captures(&buffer)?;
-                let version = m.name("version")?.as_bytes().to_vec();
-                Some(String::from_utf8(version).ok()?)
+                re.captures(&buffer)
+                    .and_then(|m| m.name("version"))
+                    .and_then(|v| str::from_utf8(v.as_bytes()).ok())
+                    .map(|v| v.to_string())
             }
         }
     }
