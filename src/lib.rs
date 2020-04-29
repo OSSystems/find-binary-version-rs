@@ -15,8 +15,34 @@
     warnings
 )]
 
-//! The library provide a way to get the binary version for a specific
-//! binary.
+//! The library provide a way for reading version from the binaries files
+//!
+//! | Platform | Build Status |
+//! | -------- | ------------ |
+//! | Linux | [![build status](https://github.com/OSSystems/find-binary-version-rs/workflows/CI%20(Linux)/badge.svg)](https://github.com/OSSystems/find-binary-version-rs/actions) |
+//! | macOS | [![build status](https://github.com/OSSystems/find-binary-version-rs/workflows/CI%20(macOS)/badge.svg)](https://github.com/OSSystems/find-binary-version-rs/actions) |
+//! | Windows | [![build status](https://github.com/OSSystems/find-binary-version-rs/workflows/CI%20(Windows)/badge.svg)](https://github.com/OSSystems/find-binary-version-rs/actions) |
+//!
+//! ---
+//!
+//! ## Dependencies
+//!
+//! You must have `libarchive` properly installed on your system in order to use
+//! this. If building on *nix systems, `pkg-config` is used to locate the
+//! `libarchive`; on Windows `vcpkg` will be used to locating the `libarchive`.
+//!
+//! The minimum supported Rust version is 1.42.
+//!
+//! ## Features
+//!
+//! The following know patterns are supported allowing the version to be detected
+//! without the need for any user specification:
+//!
+//! * U-Boot
+//! * LinuxKernel
+//!
+//! Other formats are supported through the `version_with_pattern` function,
+//! which will look for a given regular expression on the given binary.
 
 mod custom;
 mod linuxkernel;

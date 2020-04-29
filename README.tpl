@@ -1,4 +1,5 @@
-[![Build Status](https://github.com/OSSystems/find-binary-version-rs/workflows/Rust/badge.svg?branch=master)](https://github.com/OSSystems/find-binary-version-rs/actions?query=branch%3Amaster) [![Documentation](https://docs.rs/find-binary-version/badge.svg)](https://docs.rs/find-binary-version)
+[![Coverage Status](https://coveralls.io/repos/github/OSSystems/find-binary-version-rs/badge.svg?branch=master)](https://coveralls.io/github/OSSystems/find-binary-version-rs?branch=master)
+[![Documentation](https://docs.rs/find-binary-version/badge.svg)](https://docs.rs/find-binary-version)
 
 # {{crate}}
 
