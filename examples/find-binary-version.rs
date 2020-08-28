@@ -2,8 +2,7 @@
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-use exitfailure::ExitFailure;
-use failure::format_err;
+use anyhow::{format_err, Result};
 use find_binary_version::{version, version_with_pattern, BinaryKind};
 use std::{fs::File, io::BufReader, path::PathBuf};
 use structopt::StructOpt;
@@ -18,7 +17,7 @@ struct Cli {
     pattern: Option<String>,
 }
 
-fn main() -> Result<(), ExitFailure> {
+fn main() -> Result<()> {
     let cli = Cli::from_args();
 
     let mut input = BufReader::new(File::open(&cli.input)?);
@@ -34,8 +33,9 @@ fn main() -> Result<(), ExitFailure> {
             println!("{:?} has {} version", cli.input, v);
             Ok(())
         }
-        None => {
-            Err(format_err!("{:?} does not has a known version information.", cli.input).into())
-        }
+        None => Err(format_err!(
+            "{:?} does not has a known version information.",
+            cli.input
+        )),
     }
 }

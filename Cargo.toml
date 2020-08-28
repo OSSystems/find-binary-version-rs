@@ -20,6 +20,5 @@ compress-tools = "0.6"
 regex = "1"
 
 [dev-dependencies]
-exitfailure = "0.5"
-failure = "0.1"
+anyhow = "1"
 structopt = "0.3"
