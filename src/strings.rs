@@ -22,7 +22,7 @@ impl IsPrintable for u8 {
     #[inline]
     fn is_printable(self) -> bool {
         // Is an ASCII in a printable range
-        self >= 0x20 && self <= 0x7e
+        (0x20..=0x7e).contains(&self)
     }
 }
 
