@@ -15,14 +15,14 @@ use std::{io::Read, slice, str};
 /// A trait for characters/bytes that can be printable.
 pub(crate) trait IsPrintable {
     /// Is this character printable?
-    fn is_printable(self) -> bool;
+    fn is_printable(&self) -> bool;
 }
 
 impl IsPrintable for u8 {
     #[inline]
-    fn is_printable(self) -> bool {
+    fn is_printable(&self) -> bool {
         // Is an ASCII in a printable range
-        (0x20..=0x7e).contains(&self)
+        (0x20..=0x7e).contains(self)
     }
 }
 
