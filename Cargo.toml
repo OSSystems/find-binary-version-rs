@@ -16,7 +16,7 @@ travis-ci = { repository = "OSSystems/find-binary-version-rs" }
 
 [dependencies]
 byteorder = "1"
-compress-tools = "0.9"
+compress-tools = "0.10"
 regex = "1"
 
 [dev-dependencies]
