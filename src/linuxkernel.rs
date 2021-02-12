@@ -10,7 +10,7 @@ use std::{
     str,
 };
 
-#[allow(clippy::enum_variant_names)]
+#[allow(clippy::enum_variant_names, clippy::upper_case_acronyms)]
 enum LinuxKernelKind {
     ARMzImage,
     UImage,
