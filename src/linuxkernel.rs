@@ -179,7 +179,7 @@ impl<'a, R: Read + Seek> VersionFinder for LinuxKernel<'a, R> {
 
                 // Read the Linux kernel version from the reader
                 let mut buffer = [0; 0x200];
-                self.buf.read(&mut buffer).ok()?;
+                let _ = self.buf.read(&mut buffer).ok()?;
 
                 let re = Regex::new(r"(?P<version>\d+.?\.[^\s\u{0}]+)").unwrap();
                 re.captures(&buffer)
@@ -195,7 +195,7 @@ impl<'a, R: Read + Seek> VersionFinder for LinuxKernel<'a, R> {
 
                 // Read the Linux kernel version from the reader
                 let mut buffer = [0; 0x200];
-                self.buf.read(&mut buffer).ok()?;
+                let _ = self.buf.read(&mut buffer).ok()?;
 
                 let re = Regex::new(r"(?P<version>\d+.?\.[^\s\u{0}]+)").unwrap();
                 re.captures(&buffer)
