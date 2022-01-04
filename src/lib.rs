@@ -50,31 +50,39 @@ mod strings;
 mod uboot;
 
 use crate::{custom::Custom, linuxkernel::LinuxKernel, uboot::UBoot};
-use std::io::{Read, Seek};
+use tokio::io::{AsyncRead, AsyncSeek};
 
 #[derive(Debug, Copy, Clone)]
 /// Define the binary kind to use for matching.
 pub enum BinaryKind {
     /// U-Boot binary kind.
     UBoot,
-
     /// Linux Kernel binary kind.
     LinuxKernel,
 }
 
+#[async_trait::async_trait(?Send)]
 trait VersionFinder {
-    fn get_version(&mut self) -> Option<String>;
+    async fn get_version(&mut self) -> Option<String>;
 }
 
 /// Get the version for a specific binary.
-pub fn version<R: Read + Seek>(mut buffer: &mut R, kind: BinaryKind) -> Option<String> {
+pub async fn version<R: AsyncRead + AsyncSeek + Unpin>(
+    mut buffer: &mut R,
+    kind: BinaryKind,
+) -> Option<String> {
     match kind {
-        BinaryKind::LinuxKernel => LinuxKernel::from_reader(&mut buffer).get_version(),
-        BinaryKind::UBoot => UBoot::from_reader(&mut buffer).get_version(),
+        BinaryKind::LinuxKernel => LinuxKernel::from_reader(&mut buffer).get_version().await,
+        BinaryKind::UBoot => UBoot::from_reader(&mut buffer).get_version().await,
     }
 }
 
 /// Get the version for a specific pattern.
-pub fn version_with_pattern<R: Read + Seek>(mut buffer: &mut R, pattern: &str) -> Option<String> {
-    Custom::from_reader(&mut buffer, pattern).get_version()
+pub async fn version_with_pattern<R: AsyncRead + AsyncSeek + Unpin>(
+    mut buffer: &mut R,
+    pattern: &str,
+) -> Option<String> {
+    Custom::from_reader(&mut buffer, pattern)
+        .get_version()
+        .await
 }

@@ -4,7 +4,7 @@
 
 use crate::{strings::IntoStringsIter, VersionFinder};
 use regex::Regex;
-use std::io::Read;
+use tokio::io::{AsyncRead, AsyncReadExt};
 
 pub(crate) struct Custom<'a, R> {
     buf: &'a mut R,
@@ -17,11 +17,12 @@ impl<'a, R> Custom<'a, R> {
     }
 }
 
-impl<'a, R: Read> VersionFinder for Custom<'a, R> {
-    fn get_version(&mut self) -> Option<String> {
+#[async_trait::async_trait(?Send)]
+impl<'a, R: AsyncRead + Unpin> VersionFinder for Custom<'a, R> {
+    async fn get_version(&mut self) -> Option<String> {
         // FIXME: Avoid reading the whole file
         let mut buffer = Vec::new();
-        self.buf.read_to_end(&mut buffer).ok()?;
+        self.buf.read_to_end(&mut buffer).await.ok()?;
 
         let re = Regex::new(self.pattern).unwrap();
         for line in buffer.into_strings_iter() {
@@ -37,25 +38,27 @@ impl<'a, R: Read> VersionFinder for Custom<'a, R> {
 #[cfg(test)]
 mod test {
     use crate::version_with_pattern;
-    use std::io::{Read, Seek};
+    use tokio::io::{AsyncRead, AsyncSeek};
 
-    fn fixture(name: &str) -> impl Read + Seek {
-        use std::{fs::File, io::BufReader};
+    async fn fixture(name: &str) -> impl AsyncRead + AsyncSeek {
+        use tokio::{fs::File, io::BufReader};
 
         BufReader::new(
             File::open(&format!("tests/fixtures/uboot/{}", name))
+                .await
                 .unwrap_or_else(|_| panic!("Couldn't open the fixture {}", name)),
         )
     }
 
-    #[test]
-    fn valid() {
+    #[tokio::test]
+    async fn valid() {
         for (f, v) in &[
             ("arm-spl", "2017.11+fslc+ga07698f"),
             ("arm-u-boot-dtb.img", "2019.04-00014-gc93ced78db"),
         ] {
             assert_eq!(
-                version_with_pattern(&mut fixture(f), r"U-Boot(?: SPL)? (\d+.?\.[^\s]+)"),
+                version_with_pattern(&mut fixture(f).await, r"U-Boot(?: SPL)? (\d+.?\.[^\s]+)")
+                    .await,
                 Some(v.to_string()),
             );
         }
