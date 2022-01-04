@@ -6,12 +6,18 @@ use crate::{strings::IntoStringsIter, VersionFinder};
 use regex::Regex;
 use tokio::io::{AsyncRead, AsyncReadExt};
 
-pub(crate) struct Custom<'a, R> {
+pub(crate) struct Custom<'a, R>
+where
+    R: AsyncRead + Unpin,
+{
     buf: &'a mut R,
     pattern: &'a str,
 }
 
-impl<'a, R> Custom<'a, R> {
+impl<'a, R> Custom<'a, R>
+where
+    R: AsyncRead + Unpin,
+{
     pub(crate) fn from_reader(buf: &'a mut R, pattern: &'a str) -> Self {
         Custom { buf, pattern }
     }
@@ -38,9 +44,9 @@ impl<'a, R: AsyncRead + Unpin> VersionFinder for Custom<'a, R> {
 #[cfg(test)]
 mod test {
     use crate::version_with_pattern;
-    use tokio::io::{AsyncRead, AsyncSeek};
+    use tokio::io::AsyncRead;
 
-    async fn fixture(name: &str) -> impl AsyncRead + AsyncSeek {
+    async fn fixture(name: &str) -> impl AsyncRead {
         use tokio::{fs::File, io::BufReader};
 
         BufReader::new(

@@ -78,7 +78,7 @@ pub async fn version<R: AsyncRead + AsyncSeek + Unpin>(
 }
 
 /// Get the version for a specific pattern.
-pub async fn version_with_pattern<R: AsyncRead + AsyncSeek + Unpin>(
+pub async fn version_with_pattern<R: AsyncRead + Unpin>(
     mut buffer: &mut R,
     pattern: &str,
 ) -> Option<String> {
