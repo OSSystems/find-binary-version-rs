@@ -7,11 +7,11 @@ use regex::bytes::Regex;
 use std::str;
 use tokio::io::{AsyncRead, AsyncReadExt};
 
-pub(crate) struct UBoot<'a, R> {
+pub(crate) struct UBoot<'a, R: AsyncRead + Unpin> {
     buf: &'a mut R,
 }
 
-impl<'a, R> UBoot<'a, R> {
+impl<'a, R: AsyncRead + Unpin> UBoot<'a, R> {
     pub(crate) fn from_reader(buf: &'a mut R) -> Self {
         UBoot { buf }
     }

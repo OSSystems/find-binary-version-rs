@@ -70,18 +70,12 @@ async fn discover_linux_kernel_kind<R: AsyncRead + AsyncSeek + Unpin>(
     }
 }
 
-pub(crate) struct LinuxKernel<'a, R>
-where
-    R: AsyncRead + AsyncSeek,
-{
+pub(crate) struct LinuxKernel<'a, R: AsyncRead + AsyncSeek + Unpin> {
     buf: &'a mut R,
 }
 
-impl<'a, R: AsyncRead + AsyncSeek> LinuxKernel<'a, R> {
-    pub(crate) fn from_reader(buf: &'a mut R) -> Self
-    where
-        R: AsyncRead,
-    {
+impl<'a, R: AsyncRead + AsyncSeek + Unpin> LinuxKernel<'a, R> {
+    pub(crate) fn from_reader(buf: &'a mut R) -> Self {
         LinuxKernel { buf }
     }
 }
