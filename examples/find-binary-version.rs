@@ -4,8 +4,9 @@
 
 use anyhow::{format_err, Result};
 use find_binary_version::{version, version_with_pattern, BinaryKind};
-use std::{fs::File, io::BufReader, path::PathBuf};
+use std::path::PathBuf;
 use structopt::StructOpt;
+use tokio::{fs::File, io::BufReader};
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "find-binary-version")]
@@ -17,15 +18,20 @@ struct Cli {
     pattern: Option<String>,
 }
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     let cli = Cli::from_args();
 
-    let mut input = BufReader::new(File::open(&cli.input)?);
+    let mut input = BufReader::new(File::open(&cli.input).await?);
 
     let version = if let Some(pattern) = &cli.pattern {
-        version_with_pattern(&mut input, pattern)
+        version_with_pattern(&mut input, pattern).await
     } else {
-        version(&mut input, BinaryKind::UBoot).or(version(&mut input, BinaryKind::LinuxKernel))
+        version(&mut input, BinaryKind::UBoot).await.or(version(
+            &mut input,
+            BinaryKind::LinuxKernel,
+        )
+        .await)
     };
 
     match version {
