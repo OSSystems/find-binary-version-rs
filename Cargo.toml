@@ -1,6 +1,6 @@
 [package]
 name = "find-binary-version"
-version = "0.3.9"
+version = "0.4.0"
 authors = ["Otavio Salvador <otavio@ossystems.com.br>"]
 description = "Identify binary versions easily"
 repository = "https://github.com/OSSystems/find-binary-version-rs"
