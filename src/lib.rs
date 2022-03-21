@@ -15,13 +15,7 @@
     warnings
 )]
 
-//! The library provide a way for reading version from the binaries files
-//!
-//! | Platform | Build Status |
-//! | -------- | ------------ |
-//! | Linux | [![build status](https://github.com/OSSystems/find-binary-version-rs/workflows/CI%20(Linux)/badge.svg)](https://github.com/OSSystems/find-binary-version-rs/actions) |
-//! | macOS | [![build status](https://github.com/OSSystems/find-binary-version-rs/workflows/CI%20(macOS)/badge.svg)](https://github.com/OSSystems/find-binary-version-rs/actions) |
-//! | Windows | [![build status](https://github.com/OSSystems/find-binary-version-rs/workflows/CI%20(Windows)/badge.svg)](https://github.com/OSSystems/find-binary-version-rs/actions) |
+//! The library provide a way for reading version from the binaries files.
 //!
 //! ---
 //!
