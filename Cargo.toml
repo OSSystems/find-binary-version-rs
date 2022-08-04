@@ -16,7 +16,7 @@ travis-ci = { repository = "OSSystems/find-binary-version-rs" }
 
 [dependencies]
 async-trait = "0.1"
-compress-tools = { version = "0.12", features = ["tokio_support"] }
+compress-tools = { version = "0.13", features = ["tokio_support"] }
 regex = "1"
 tokio = { version = "1", features = ["io-util"] }
 
