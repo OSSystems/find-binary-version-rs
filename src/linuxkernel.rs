@@ -5,7 +5,7 @@
 use crate::VersionFinder;
 use regex::bytes::Regex;
 use std::{io::SeekFrom, str};
-use tokio::io::{self, AsyncRead, AsyncReadExt, AsyncSeek, AsyncSeekExt};
+use tokio::io::{AsyncRead, AsyncReadExt, AsyncSeek, AsyncSeekExt};
 
 #[allow(clippy::enum_variant_names, clippy::upper_case_acronyms)]
 enum LinuxKernelKind {
@@ -123,7 +123,7 @@ impl<'a, R: AsyncRead + AsyncSeek + Unpin> VersionFinder for LinuxKernel<'a, R> 
 
                         let mut slice = &buffer[offset..];
                         let current = self.buf.seek(SeekFrom::Current(0)).await.ok()?;
-                        let rd = io::AsyncReadExt::chain(&mut slice, &mut self.buf);
+                        let rd = AsyncReadExt::chain(&mut slice, &mut self.buf);
 
                         // Try to get version from uncompressed data
                         if let Some(version) = get_version_from_arm(rd).await {
@@ -213,9 +213,9 @@ mod test {
         use tokio::{fs::File, io::BufReader};
 
         BufReader::new(
-            File::open(&format!("tests/fixtures/linuxkernel/{}", name))
+            File::open(&format!("tests/fixtures/linuxkernel/{name}"))
                 .await
-                .unwrap_or_else(|_| panic!("Couldn't open the fixture {}", name)),
+                .unwrap_or_else(|_| panic!("Couldn't open the fixture {name}")),
         )
     }
 

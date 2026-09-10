@@ -59,9 +59,9 @@ mod test {
         use tokio::{fs::File, io::BufReader};
 
         BufReader::new(
-            File::open(&format!("tests/fixtures/uboot/{}", name))
+            File::open(&format!("tests/fixtures/uboot/{name}"))
                 .await
-                .unwrap_or_else(|_| panic!("Couldn't open the fixture {}", name)),
+                .unwrap_or_else(|_| panic!("Couldn't open the fixture {name}")),
         )
     }
 
